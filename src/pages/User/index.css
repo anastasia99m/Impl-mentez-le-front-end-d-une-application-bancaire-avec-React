@@ -1,0 +1,17 @@
+h2 {
+    color: white;
+    font-size: 32px;
+    font-weight: bold;
+    padding-top: 20px;
+}
+
+.editNameBtn {
+    width: 90px;
+    height: 40px;
+    border-color: #00bc77;
+    background-color: #00bc77;
+    color: #fff;
+    font-weight: bold;
+    margin-top: 20px;
+}
+
