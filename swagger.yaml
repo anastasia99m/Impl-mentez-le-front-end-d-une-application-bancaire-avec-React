@@ -102,98 +102,168 @@ paths:
         '500':
           description: Internal Server Error
       
-  /transactions:
+  /comptes/{compteId}/transactions:
     get:
+      security:
+        - Bearer: []
       tags:
         - Transactions
-      summary: Transactions du mois en cours groupées par compte
-      description: Retourne les détails de toutes les transactions pour le mois en cours, organisées par compte utilisateur.
+      summary: Transactions groupées par compte
+      description: Retourne les détails de toutes les transactions, organisées par compte utilisateur.
       parameters:
-        - name: month
-          in: query
-          description: Mois pour lequel récupérer les transactions
+        - name: CompteId
+          in: header
+          description: Token d'authentification de l'utilisateur
           required: true
-          operationId: transactionsbymonth
-          explode: true
           schema:
             type: string
-            enum:
-              - janvier
-              - fevrier
       responses:
         '200':
-          description: Succès de la requête. Les transactions groupées.
+          description: Succès de la requête. Les transactions groupées par compte.
           schema:
-            content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/'
+            $ref: '#/components/schemas/Transaction'
         '400':
           description: Aucune élément trouvé 
-  /transactions/{transactionId}:
+        '500':
+          description: Erreur du serveur
+  /comptes/{compteId}/transactions/{transactionId}:
     get:
+      security:
+        - Bearer: []
       tags:
         - Transactions
       summary: Obtenir les détails d'une transaction spécifique
       description: Retourne les détails d'une transaction spécifique identifiée par transactionId.
       parameters:
+        - name: Authorization
+          in: header
+          description: Token d'authentification de l'utilisateur
+          required: true
+          schema:
+            type: string
         - name: transactionId
           in: path
           required: true
-          type: integer
+          type: string
           description: ID de la transaction à récupérer
       responses:
         '200':
           description: Succès de la requête. Retourne les détails de la transaction demandée.
           schema:
-            content:
-            application/json:
-              schema:
-                $ref: '#/components/'
+            $ref: '#/components/schemas/TransactionDetails'
         '404':
           description: La transaction spécifiée n'a pas été trouvée.
+        '500':
+          description: Erreur du serveur
+  /transactions/{transactionId}/category:
     put:
+      security:
+        - Bearer: []
       tags:
         - Transactions
       summary: Mettre à jour les détails d'une transaction spécifique
       description: Met à jour les informations d'une transaction spécifique identifiée par transactionId.
       parameters:
+        - name: Authorization
+          in: header
+          description: Token d'authentification de l'utilisateur
+          required: true
+          schema:
+            type: string
         - name: transactionId
           in: path
           required: true
           type: string
           description: ID de la transaction à mettre à jour
-        - in: body
-          name: body
+        - name: catégorie
+          in: query
           required: true
-          description: Nouveau valeur
+          explode: true
+          description: Nouveau valeur de la categorie
+          schema:
+            type: string
+            default: available
+            enum:
+              - available
+              - pending
+              - sold
+      responses:
+        '200':
+          description: Succès de la requête. Retourne les détails mis à jour de la transaction.
+          schema:
+            $ref: '#/components/schemas/TransactionUpdate'
+        '404':
+          description: La transaction spécifiée n'a pas été trouvée.
+        '500':
+          description: Erreur du serveur
+  /utilisateur/comptes/transactions/{transactionId}/note:
+    put:
+      security:
+        - Bearer: []
+      tags:
+        - Transactions
+      summary: Mettre à jour les détails d'une transaction spécifique
+      description: Met à jour les informations d'une transaction spécifique identifiée par transactionId.
+      parameters:
+        - name: Authorization
+          in: header
+          description: Token d'authentification de l'utilisateur
+          required: true
+          schema:
+            type: string
+        - name: transactionId
+          in: path
+          required: true
+          type: string
+          description: ID de la transaction à mettre à jour
+        - name: note
+          in: body
+          required: true
+          description: Nouveau valeur pour la note
           schema:
             type: string
       responses:
         '200':
           description: Succès de la requête. Retourne les détails mis à jour de la transaction.
           schema:
-            type: object 
+            $ref: '#/components/schemas/TransactionUpdateNote'
         '404':
           description: La transaction spécifiée n'a pas été trouvée.
+        '500':
+          description: Erreur du serveur
+  /utilisateur/comptes/transactions/{transactionId}/{noteId}:
     delete:
+      security:
+        - Bearer: []
       tags:
         - Transactions
       summary: Supprimer une infomation sur une transaction spécifique 
       description: Supprime une transaction spécifique identifiée par transactionId.
       parameters:
+        - name: Authorization
+          in: header
+          description: Token d'authentification de l'utilisateur
+          required: true
+          schema:
+            type: string
         - name: transactionId
           in: path
           required: true
           type: string
           description: ID de la transaction à supprimer
+        - name: noteId
+          in: path
+          required: true
+          description: ID de la note à supprimer
+          schema:
+            type: string
       responses:
         '200':
           description: Succès de la requête. La transaction a été supprimée avec succès.
         '404':
           description: La transaction spécifiée n'a pas été trouvée.
+        '500':
+          description: Erreur du serveur
 
 securityDefinitions:
   Bearer:
@@ -250,5 +320,258 @@ definitions:
     properties:
       userName:
         type: string
-        
+  Transaction:
+    type: object
+    properties:
+        id:
+          type: string
+          description: ID de la transaction
+        compte:
+          type: string
+          description: ID du compte associé à la transaction
+        date:
+          type: string
+          format: date
+          description: Date de la transaction
+        description:
+          type: string
+          description: Description de la transaction
+        montant:
+          type: number
+          description: Montant de la transaction
+        solde:
+          type: number
+          description: Montant de la transaction
+  Categorie:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID de la transaction
+        compte:
+          type: string
+          description: ID du compte associé à la transaction
+        date:
+          type: string
+          format: date
+          description: Date de la transaction
+        description:
+          type: string
+          description: Description de la transaction
+        montant:
+          type: number
+          description: Montant de la transaction
+        solde:
+          type: number
+          description: Montant de la transaction
+        categoryType:
+          type: string
+          description: Type de la catégorie
+        categoryNom:
+          type: string
+          description: Nom de la catégorie
+        note: 
+          type: string
+          description: Remarque  
+  TransactionUpdateNote:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID de la transaction
+        compte:
+          type: string
+          description: ID du compte associé à la transaction
+        date:
+          type: string
+          format: date
+          description: Date de la transaction
+        description:
+          type: string
+          description: Description de la transaction
+        montant:
+          type: number
+          description: Montant de la transaction
+        solde:
+          type: number
+          description: Montant de la transaction
+        categoryType:
+          type: string
+          description: Type de la catégorie
+        categoryNom:
+          type: string
+          description: Nom de la catégorie
+        note: 
+          type: string
+          description: Remarque
+components:
+  schemas:
+    Order:
+        catégorie:
+          type: query
+          description: Order Status
+          example: approved
+          enum:
+            - placed
+            - approved
+            - delivered
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID de la transaction
+          example: 1
+        compte:
+          type: string
+          description: ID du compte associé à la transaction
+          example: compte1
+        date:
+          type: string
+          format: date
+          description: Date de la transaction
+          example: "2024-07-01"  
+        description:
+          type: string
+          description: Description de la transaction
+          example: "Achat en ligne - Amazon"
+        montant:
+          type: number
+          description: Montant de la transaction
+          example: 26.99
+        solde:
+          type: number
+          description: Montant de la transaction
+          example: 1500.8
+    TransactionDetails:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID de la transaction
+          example: 1
+        compte:
+          type: string
+          description: ID du compte associé à la transaction
+          example: compte1
+        date:
+          type: string
+          format: date
+          description: Date de la transaction
+          example: "2024-07-01"  
+        description:
+          type: string
+          description: Description de la transaction
+          example: "Achat en ligne - Amazon"
+        montant:
+          type: number
+          description: Montant de la transaction
+          example: 26.99
+        solde:
+          type: number
+          description: Montant de la transaction
+          example: 1500.8
+        categoryType:
+          type: string
+          description: Type de la catégorie
+          example: Électronique
+        categoryNom:
+          type: string
+          description: Nom de la catégorie
+          example: Électronique
+        note: 
+          type: string
+          description: Remarque
+          example: Bouilloire
+
+    TransactionUpdate:
+      catégorie:
+          type: string
+          description: pet status in the store
+          enum:
+            - placed
+            - approved
+            - delivered
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID de la transaction
+          example: 1
+        compte:
+          type: string
+          description: ID du compte associé à la transaction
+          example: compte1
+        date:
+          type: string
+          format: date
+          description: Date de la transaction
+          example: "2024-07-01"  
+        description:
+          type: string
+          description: Description de la transaction
+          example: "Achat en ligne - Amazon"
+        montant:
+          type: number
+          description: Montant de la transaction
+          example: 26.99
+        solde:
+          type: number
+          description: Montant de la transaction
+          example: 1500.8
+        categoryType:
+          type: string
+          description: Type de la catégorie
+          example: Électronique
+        categoryNom:
+          type: string
+          description: Nom de la catégorie
+          example: Cuisine
+        note: 
+          type: string
+          description: Remarque
+          example: Bouilloire
+
+    TransactionUpdateNote:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID de la transaction
+          example: 1
+        compte:
+          type: string
+          description: ID du compte associé à la transaction
+          example: compte1
+        date:
+          type: string
+          format: date
+          description: Date de la transaction
+          example: "2024-07-01"  
+        description:
+          type: string
+          description: Description de la transaction
+          example: "Achat en ligne - Amazon"
+        montant:
+          type: number
+          description: Montant de la transaction
+          example: 26.99
+        solde:
+          type: number
+          description: Montant de la transaction
+          example: 1500.8
+        categoryType:
+          type: string
+          description: Type de la catégorie
+          example: Électronique
+        categoryNom:
+          type: string
+          description: Nom de la catégorie
+          example: Électroménagers
+        note: 
+          type: string
+          description: Remarque
+          example: Achat
       
+        
+        
